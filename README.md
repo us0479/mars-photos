@@ -132,7 +132,7 @@ Kotlin 표준 라이브러리 2.4.0을 가져오면서 메타데이터 버전 �
 
 ### 단위 테스트 결과
 
-![ViewModel 단위 테스트 실행 결과](screenshots/unit-tests.png
+![ViewModel 단위 테스트 실행 결과](screenshots/unit-tests.png)
 
 
 ### Compose UI 테스트 결과
