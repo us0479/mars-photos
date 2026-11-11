@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mars_title">화성 사진 갤러리</string>
+    <string name="mars_loading">화성 사진 목록을 불러오는 중입니다.</string>
+    <string name="mars_error_title">사진 목록을 불러오지 못했습니다.</string>
+    <string name="mars_error_message">인터넷 연결을 확인한 후 다시 시도해 주세요.</string>
+    <string name="mars_retry">다시 시도</string>
+    <string name="mars_photo_count">사진 %1$d장</string>
+    <string name="mars_photo_id">ID %1$s</string>
+    <string name="mars_photo_description">화성 사진 ID %1$s</string>
+    <string name="mars_empty">표시할 사진이 없습니다.</string>
+</resources>
