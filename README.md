@@ -132,4 +132,15 @@ Kotlin 표준 라이브러리 2.4.0을 가져오면서 메타데이터 버전 �
 
 ### 단위 테스트 결과
 
-![ViewModel 단위 테스트 실행 결과](screenshots/unit-tests.png)
+![ViewModel 단위 테스트 실행 결과](screenshots/unit-tests.png
+
+
+### Compose UI 테스트 결과
+
+Pixel 8 (2) 에뮬레이터(Android 15, API 35)에서 `MarsPhotosAppTest`의 테스트 3개가 모두 통과했다.
+
+- 로딩 화면에 사진 목록을 불러오는 중이라는 안내가 표시되는지 확인했다.
+- 오류 화면에 안내 문구가 표시되고, `다시 시도` 버튼을 누르면 재시도 콜백이 호출되는지 확인했다.
+- 성공 화면에 사진 개수와 사진 카드의 ID가 표시되는지 확인했다.
+
+![MarsPhotosAppTest 3개 통과 결과](screenshots/ui-tests.png)
