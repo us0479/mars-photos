@@ -12,6 +12,8 @@
 
 Android Studio에서 프로젝트를 열고 Gradle Sync를 마친 뒤, 인터넷이 연결된 에뮬레이터에서 `app`을 실행한다.
 
+빌드 도구는 Android Gradle Plugin(AGP) **9.5.1**과 Gradle Wrapper **9.6.0**을 사용한다. AGP 업그레이드 후 발생한 최소 Gradle 버전 오류를 해결하기 위해 Wrapper 버전과 배포 파일의 SHA-256 체크섬을 함께 갱신했으며, Gradle Sync와 아래 ViewModel 단위 테스트 실행이 성공했다.
+
 ```powershell
 .\gradlew.bat :app:testDebugUnitTest --tests "com.example.marsphotos.ui.MarsViewModelTest"
 .\gradlew.bat :app:connectedDebugAndroidTest
@@ -20,9 +22,38 @@ Android Studio에서 프로젝트를 열고 Gradle Sync를 마친 뒤, 인터넷
 | 테스트 종류 | 테스트 파일 | 확인 항목 | 결과 |
 | --- | --- | --- | --- |
 | JVM 단위 테스트 | `app/src/test/java/com/example/marsphotos/ui/MarsViewModelTest.kt` | 응답 전 Loading과 응답 후 Success, 오프라인 요청 실패 시 Error, 실패 후 재시도 성공 (3건) | 3 PASSED |
-| Compose UI 테스트 | `app/src/androidTest/java/com/example/marsphotos/ui/MarsPhotosAppTest.kt` | 로딩 문구, 오류 문구와 재시도 버튼 동작, 성공 화면의 사진 개수와 사진 ID (4건) | 4 PASSED |
+| Compose UI 테스트 | `app/src/androidTest/java/com/example/marsphotos/ui/MarsPhotosAppTest.kt` | 로딩 문구, 오류 문구와 재시도 버튼 동작, 성공 화면의 사진 개수와 사진 ID (3건) | 3 PASSED |
 
 Compose UI 테스트는 연결된 에뮬레이터에서 `:app:connectedDebugAndroidTest`를 실행하여 직접 검증을 완료했다.
+
+## Fake Repository 기반 ViewModel 테스트 (LAB 4)
+
+`MarsViewModel`은 `MarsPhotosRepository` 인터페이스를 생성자로 전달받는다. 앱에서는 `NetworkMarsPhotosRepository`를 주입하지만, 단위 테스트에서는 `MarsPhotosRepository { ... }` 형태의 람다로 가짜 저장소를 만들어 주입한다. 별도의 `FakeRepository` 또는 `FakeErrorRepository` 클래스 없이도, 준비한 사진 목록을 반환하거나 예외를 던지는 fake 구현으로 응답을 제어한다.
+
+이 테스트는 실제 Retrofit 서비스나 네트워크 저장소를 생성하지 않으므로 화성 사진 API 호출 없이 JVM에서 실행된다. 에뮬레이터나 API 서버 연결도 필요하지 않다.
+
+| 테스트 메서드 | fake 저장소 동작 | 검증 내용 |
+| --- | --- | --- |
+| `loadPhotos_waitsInLoading_thenShowsSuccess` | `CompletableDeferred`로 응답을 대기시킨 후 준비한 사진 목록 반환 | 응답 전 `Loading`, 응답 후 `Success(photos)` |
+| `loadPhotos_whenOffline_showsError` | `IOException("offline")` 발생 | `Error` 상태 전환 |
+| `retry_afterError_loadsPhotosAgain` | 첫 요청은 예외 발생, 두 번째 요청은 사진 목록 반환 | 오류 후 재시도 시 `Loading` → `Success`, 저장소 호출 횟수 2회 |
+
+### 코루틴 실행 제어
+
+- [MarsViewModelTest.kt](app/src/test/java/com/example/marsphotos/ui/MarsViewModelTest.kt): JUnit 4의 `@Test`, `@get:Rule`과 `runTest`를 사용하고, `assertEquals`로 상태와 호출 횟수를 검증한다.
+- [TestDispatcherRule.kt](app/src/test/java/com/example/marsphotos/ui/TestDispatcherRule.kt): `StandardTestDispatcher`로 `Dispatchers.Main`을 교체하고 테스트 종료 후 `resetMain()`으로 복원한다.
+- `runCurrent()`로 현재 예약된 작업을 실행하고, 응답 완료 후 `advanceUntilIdle()`로 남은 코루틴 작업을 실행한 뒤 결과를 확인한다.
+- 테스트 의존성은 JUnit 4와 `kotlinx-coroutines-test`를 사용한다.
+
+### 완료 체크리스트
+
+- [x] fake 저장소로 성공 경로 검증 (`Success`)
+- [x] 예외를 던지는 fake 저장소로 실패 경로 검증 (`Error`)
+- [x] `runTest` + `TestDispatcherRule`로 Main 디스패처 교체
+- [x] 실제 API 호출 없이 테스트 실행
+- [x] 실패 후 재시도 성공 및 호출 횟수 검증
+
+**검증 결과:** Gradle 9.6.0으로 위의 `MarsViewModelTest` 실행 명령을 수행하여 **3 passed, 0 skipped, 0 failed**를 확인했다. 이 결과는 ViewModel JVM 단위 테스트 3개에 대한 것이며, Compose UI 테스트는 별도의 에뮬레이터 테스트다.
 
 ## AI 활용 기록
 
